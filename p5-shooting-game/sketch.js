@@ -1,18 +1,23 @@
 let enemy;
 let score = 0;
 let isGoing = true;
+let lives = 3;
+let pip;
 let boom;
 
+// Loads in the sounds
 function preload() {
   boom = loadSound("assets/boom.wav");
   pip = loadSound("assets/pip.wav");
 }
 
 function setup() {
-  createCanvas(600, 600);
+  createCanvas(1280, 720);
 
+  // Plays starting noise
   pip.play();
   
+  // Creates enemy object
   enemy = {
       x: width / 2,
       y: height / 2,
@@ -20,11 +25,11 @@ function setup() {
       speed: 1,
   
       start: function() {
-        this.x = floor(random() * 400);
+        this.x = floor(random() * width);
         this.y = height;
-        this.d = floor(random() * 60);
-        this.d = map(this.d, 0, 60, 40, 60);
-        this.increaseSpeed(0.1);
+        this.d = floor(random() * 100);
+        this.d = map(this.d, 0, 100, 50, 70);
+        this.increaseSpeed(0.2);
       },
 
       increaseSpeed: function(amount) {
@@ -49,53 +54,77 @@ function setup() {
       },
 
       end: function() {
-        if(this.y <= 0)
+        if(this.y <= 0 && lives <= 1)
         {
           isGoing = false;
           fill(255);
           textSize(60);
           textAlign("center");
           text("Your score was: " + score, width / 2, height / 2);
+        } else if(this.y <= 0) {
+          boom.play();
+          lives--;
+          this.start();
         }
       }
   }
-
+  
+  //Starts first enemy
   enemy.start();
+}
+
+function renderHUD() {
+  // Creates "Scope"
+  rectMode("center")
+  ellipse(mouseX, mouseY, 30, 30);
+  line(mouseX, height, mouseX, mouseY)
+  line(mouseX, 0, mouseX, mouseY)
+  line(width, mouseY, mouseX, mouseY)
+  line(0, mouseY, mouseX, mouseY)
+
+  //Displays your score on the screen
+  fill(255);
+  textSize(25);
+  text(score, width - 45, 50);
+
+  //Displays your lives on the screen
+  fill(255);
+  textSize(25);
+  for(let i = 0; i < lives; i++) {
+    text("♥", 45 + i*20, 50);
+  }
 }
 
 function draw() {
   background(0);
   stroke(255);
-  strokeWeight(4);
+  strokeWeight(3);
   
   if(isGoing) {
     fill(0);
+    // Starts enemy
     enemy.show();
-    
-    fill(255);
-    textSize(30);
-    text(score, width - 45, 50);
 
     noFill();
-    rectMode("center")
-    ellipse(mouseX, mouseY, 50, 50);
-    line(mouseX, height, mouseX, mouseY)
-    line(mouseX, 0, mouseX, mouseY)
-    line(width, mouseY, mouseX, mouseY)
-    line(0, mouseY, mouseX, mouseY)
+
+    renderHUD();
   }
   enemy.end();
 }
 
+
+//Detects mouse and plays sound when hit something
 function mousePressed() {
   if(isGoing)
   {
     boom.setVolume(0.3);
-    boom.play();
     if(enemy.detect(mouseX, mouseY))
     {
+      boom.play();
       enemy.start();
       score++;
+    } else {
+      pip.play();
     }
   }
 }
